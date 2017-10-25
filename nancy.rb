@@ -6,6 +6,8 @@ module Nancy
       @routes = {}
     end
 
+    attr_reader :routes, :request
+
     def call(env)
       @request = Rack::Request.new(env)
       verb = @request.request_method
@@ -13,16 +15,30 @@ module Nancy
       handler = @routes.fetch(verb, {}).fetch(requested_path, nil)
 
       if handler
-        instance_eval(@handler)
+        instance_eval(&handler)
       else
         [404, {}, ["Oops! No route for #{verb} #{requested_path}"]]
       end
     end
 
-    attr_reader :routes
-
     def get(path, &handler)
       route("GET", path, &handler)
+    end
+
+    def post(path, &handler)
+      route("POST", path, &handler)
+    end
+
+    def put(path, &handler)
+      route("PUT", path, &handler)
+    end
+
+    def patch(path, &handler)
+      route("PATCH", path, &handler)
+    end
+
+    def delete(path, &handler)
+      route("DELETE", path, &handler)
     end
 
     def params
@@ -46,6 +62,10 @@ end
 
 nancy.get "/" do
   [200, {}, ["Your params are #{params.inspect}"]]
+end
+
+nancy.post "/" do
+  [200, {}, request.body]
 end
 
 puts nancy.routes
